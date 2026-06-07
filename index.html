@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f6f3ee">
+    <title>Taiwan Mandarin Flashcards</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Taiwan Mandarin</p>
+          <h1>Flashcards</h1>
+        </div>
+        <button id="shuffleBtn" class="icon-button" type="button" aria-label="Shuffle cards" title="Shuffle cards">
+          <span aria-hidden="true">↻</span>
+        </button>
+      </header>
+
+      <section class="study-panel" aria-label="Study flashcard">
+        <div class="progress-row">
+          <span id="cardCounter">1 / 8</span>
+          <span id="categoryLabel">Business</span>
+        </div>
+
+        <div class="audio-row" aria-label="Audio controls">
+          <button id="speakWordBtn" type="button">Play Word</button>
+          <button id="speakSentenceBtn" type="button">Play Sentence</button>
+          <button id="stopAudioBtn" type="button">Stop</button>
+        </div>
+
+        <article id="card" class="flashcard" tabindex="0" role="button" aria-label="Flip flashcard">
+          <div class="card-face card-front">
+            <p id="traditional" class="hanzi">投資人</p>
+            <p id="simplified" class="hanzi-secondary">投资人</p>
+            <p id="wordPinyin" class="pinyin">tóuzīrén</p>
+            <div class="sentence-block">
+              <p id="sentenceTraditional" class="sentence">他是一位科技公司的投資人。</p>
+              <p id="sentenceSimplified" class="sentence-muted">他是一位科技公司的投资人。</p>
+              <p id="sentencePinyin" class="sentence-pinyin">Tā shì yí wèi kējì gōngsī de tóuzīrén.</p>
+            </div>
+          </div>
+          <div class="card-face card-back">
+            <p id="meaning" class="meaning">investor</p>
+            <div class="sentence-block english-block">
+              <p id="sentenceEnglish" class="english-sentence">He is an investor in a technology company.</p>
+            </div>
+          </div>
+        </article>
+
+        <div class="controls" aria-label="Card controls">
+          <button id="prevBtn" type="button">Previous</button>
+          <button id="flipBtn" class="primary" type="button">Flip</button>
+          <button id="nextBtn" type="button">Next</button>
+        </div>
+      </section>
+
+      <section class="practice-panel" aria-label="Writing practice">
+        <div class="section-heading">
+          <h2>Write It</h2>
+          <button id="clearPracticeBtn" class="text-button" type="button">Clear</button>
+        </div>
+        <textarea id="practiceBox" spellcheck="false" aria-label="Writing practice area" placeholder="Practice writing the current word or sentence here..."></textarea>
+      </section>
+
+      <section class="list-panel" aria-label="Flashcard list">
+        <div class="section-heading">
+          <h2>Card List</h2>
+          <button id="toggleImportBtn" class="text-button" type="button" aria-expanded="false">Edit</button>
+        </div>
+        <div id="cardList" class="card-list"></div>
+      </section>
+
+      <section id="importPanel" class="import-panel hidden" aria-label="Edit flashcards">
+        <h2>Edit Cards</h2>
+        <p class="help-text">Paste rows as: Traditional | Simplified | Pinyin | Meaning | Sentence Traditional | Sentence Simplified | Sentence Pinyin | Sentence English | Category</p>
+        <textarea id="importBox" spellcheck="false"></textarea>
+        <div class="controls compact">
+          <button id="loadSampleBtn" type="button">Sample</button>
+          <button id="resetDeckBtn" type="button">Reset Deck</button>
+          <button id="applyImportBtn" class="primary" type="button">Apply</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="cards.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
