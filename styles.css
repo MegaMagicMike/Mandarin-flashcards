@@ -107,6 +107,20 @@ h2 {
   margin-bottom: 12px;
 }
 
+.direction-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.direction-row button {
+  width: 100%;
+  background: var(--accent-soft);
+  border-color: rgba(15, 118, 110, 0.24);
+  color: var(--accent-dark);
+}
+
 #categoryLabel {
   color: var(--accent-dark);
 }
@@ -150,6 +164,26 @@ h2 {
 .flashcard.flipped .card-back {
   transform: rotateY(0);
   opacity: 1;
+}
+
+.flashcard.english-first .card-front {
+  transform: rotateY(180deg);
+  opacity: 0;
+}
+
+.flashcard.english-first .card-back {
+  transform: rotateY(0);
+  opacity: 1;
+}
+
+.flashcard.english-first.flipped .card-front {
+  transform: rotateY(0);
+  opacity: 1;
+}
+
+.flashcard.english-first.flipped .card-back {
+  transform: rotateY(180deg);
+  opacity: 0;
 }
 
 .hanzi {
@@ -336,6 +370,10 @@ textarea {
 
 @media (max-width: 380px) {
   .audio-row {
+    grid-template-columns: 1fr;
+  }
+
+  .direction-row {
     grid-template-columns: 1fr;
   }
 }

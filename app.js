@@ -1,9 +1,13 @@
 const sampleCards = Array.isArray(window.defaultCards) ? window.defaultCards : [];
-const storageKey = "taiwanMandarinFlashcards.v5";
+const storageKey = "taiwanMandarinFlashcards.v7";
+const directionStorageKey = "taiwanMandarinFlashcardDirection";
+const sentencePinyinStorageKey = "taiwanMandarinSentencePinyin";
 
 let cards = loadCards();
 let currentIndex = 0;
 let isFlipped = false;
+let isChineseFirst = loadDirection();
+let isSentencePinyinVisible = loadSentencePinyin();
 
 const elements = {
   card: document.getElementById("card"),
@@ -24,6 +28,8 @@ const elements = {
   speakWordBtn: document.getElementById("speakWordBtn"),
   speakSentenceBtn: document.getElementById("speakSentenceBtn"),
   stopAudioBtn: document.getElementById("stopAudioBtn"),
+  directionBtn: document.getElementById("directionBtn"),
+  sentencePinyinBtn: document.getElementById("sentencePinyinBtn"),
   clearPracticeBtn: document.getElementById("clearPracticeBtn"),
   practiceBox: document.getElementById("practiceBox"),
   cardList: document.getElementById("cardList"),
@@ -44,8 +50,24 @@ function loadCards() {
   }
 }
 
+function loadDirection() {
+  return localStorage.getItem(directionStorageKey) !== "english";
+}
+
+function loadSentencePinyin() {
+  return localStorage.getItem(sentencePinyinStorageKey) === "visible";
+}
+
 function saveCards() {
   localStorage.setItem(storageKey, JSON.stringify(cards));
+}
+
+function saveDirection() {
+  localStorage.setItem(directionStorageKey, isChineseFirst ? "chinese" : "english");
+}
+
+function saveSentencePinyin() {
+  localStorage.setItem(sentencePinyinStorageKey, isSentencePinyinVisible ? "visible" : "hidden");
 }
 
 function resetDeck() {
@@ -73,6 +95,12 @@ function renderCard() {
   elements.sentencePinyin.textContent = card.sentencePinyin;
   elements.sentenceEnglish.textContent = card.sentenceEnglish || makeSentenceEnglish(card);
   elements.card.classList.toggle("flipped", isFlipped);
+  elements.card.classList.toggle("english-first", !isChineseFirst);
+  elements.directionBtn.textContent = isChineseFirst ? "Default: Chinese First" : "Default: English First";
+  elements.directionBtn.setAttribute("aria-pressed", String(!isChineseFirst));
+  elements.sentencePinyin.classList.toggle("hidden", !isSentencePinyinVisible);
+  elements.sentencePinyinBtn.textContent = isSentencePinyinVisible ? "Sentence Pinyin: On" : "Sentence Pinyin: Off";
+  elements.sentencePinyinBtn.setAttribute("aria-pressed", String(isSentencePinyinVisible));
   renderList();
 }
 
@@ -112,6 +140,19 @@ function shuffleCards() {
   currentIndex = 0;
   isFlipped = false;
   saveCards();
+  renderCard();
+}
+
+function toggleDirection() {
+  isChineseFirst = !isChineseFirst;
+  isFlipped = false;
+  saveDirection();
+  renderCard();
+}
+
+function toggleSentencePinyin() {
+  isSentencePinyinVisible = !isSentencePinyinVisible;
+  saveSentencePinyin();
   renderCard();
 }
 
@@ -218,6 +259,8 @@ elements.speakSentenceBtn.addEventListener("click", speakCurrentSentence);
 elements.stopAudioBtn.addEventListener("click", () => {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 });
+elements.directionBtn.addEventListener("click", toggleDirection);
+elements.sentencePinyinBtn.addEventListener("click", toggleSentencePinyin);
 elements.clearPracticeBtn.addEventListener("click", () => {
   elements.practiceBox.value = "";
   elements.practiceBox.focus();
@@ -254,6 +297,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "f") flipCard();
   if (event.key.toLowerCase() === "w") speakCurrentWord();
   if (event.key.toLowerCase() === "s") speakCurrentSentence();
+  if (event.key.toLowerCase() === "d") toggleDirection();
+  if (event.key.toLowerCase() === "p") toggleSentencePinyin();
 });
 
 if ("speechSynthesis" in window) {
