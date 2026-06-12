@@ -28,18 +28,11 @@ Your edited cards are saved in the browser on that device.
 
 Use `Play Word` or `Play Sentence` on each card. The site uses the browser's built-in speech voice and prefers `zh-TW` when available.
 
-## Writing Mode And OCR
+## Writing Mode
 
 Use `Writing Mode` to practice from the English prompt on a finger/stylus canvas.
 
-The site supports two checking modes:
-
-- Self-grade with `Correct`, `Not Yet`, and `Reveal Answer`.
-- OCR-grade with `Check OCR`, after you deploy `ocr-worker.js` as a backend endpoint.
-
-Do not put an OpenAI API key in `index.html`, `app.js`, or any GitHub Pages file. Deploy `ocr-worker.js` somewhere server-side, such as Cloudflare Workers, add `OPENAI_API_KEY` as a worker secret, then paste the worker URL into `OCR Setup` in the site.
-
-The OCR worker sends the canvas image to OpenAI's vision-capable Responses API and asks it to compare your handwriting against the card's Traditional and Simplified answers. OpenAI documents this image input pattern here: https://developers.openai.com/api/docs/guides/images-vision
+Use `Reveal Answer` when you want to compare your writing, `Try Again` to clear the canvas, and `Correct` when you want to mark the card as right.
 
 Keyboard shortcuts:
 
@@ -59,6 +52,5 @@ The layout is responsive for phone screens. For the easiest phone workflow, put 
 - `styles.css`
 - `cards.js`
 - `app.js`
-- `ocr-worker.js` only if you want to deploy the OCR backend separately
 
 The current deck is stored in `cards.js`.

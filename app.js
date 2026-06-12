@@ -3,7 +3,6 @@ const storageKey = "taiwanMandarinFlashcards.v7";
 const directionStorageKey = "taiwanMandarinFlashcardDirection";
 const sentencePinyinStorageKey = "taiwanMandarinSentencePinyin";
 const writingModeStorageKey = "taiwanMandarinWritingMode";
-const ocrEndpointStorageKey = "taiwanMandarinOcrEndpoint";
 
 let cards = loadCards();
 let currentIndex = 0;
@@ -48,12 +47,9 @@ const elements = {
   writingPinyin: document.getElementById("writingPinyin"),
   writingFeedback: document.getElementById("writingFeedback"),
   clearCanvasBtn: document.getElementById("clearCanvasBtn"),
-  checkOcrBtn: document.getElementById("checkOcrBtn"),
   markCorrectBtn: document.getElementById("markCorrectBtn"),
-  markWrongBtn: document.getElementById("markWrongBtn"),
   revealAnswerBtn: document.getElementById("revealAnswerBtn"),
   tryAgainBtn: document.getElementById("tryAgainBtn"),
-  ocrEndpointBtn: document.getElementById("ocrEndpointBtn"),
   writingPrevBtn: document.getElementById("writingPrevBtn"),
   writingNextBtn: document.getElementById("writingNextBtn"),
   clearPracticeBtn: document.getElementById("clearPracticeBtn"),
@@ -220,13 +216,14 @@ function toggleWritingMode() {
 function resetWritingAttempt() {
   isWritingAnswerVisible = false;
   setWritingFeedback("", "");
-  elements.revealAnswerBtn.classList.add("hidden");
+  elements.revealAnswerBtn.classList.remove("hidden");
   elements.tryAgainBtn.classList.add("hidden");
   clearWritingCanvas();
 }
 
 function revealWritingAnswer() {
   isWritingAnswerVisible = true;
+  elements.revealAnswerBtn.classList.add("hidden");
   elements.tryAgainBtn.classList.remove("hidden");
   renderCard();
 }
@@ -236,14 +233,6 @@ function markWritingCorrect() {
   elements.revealAnswerBtn.classList.add("hidden");
   elements.tryAgainBtn.classList.remove("hidden");
   setWritingFeedback("Correct. Compare your writing with the answer.", "correct");
-  renderCard();
-}
-
-function markWritingWrong() {
-  isWritingAnswerVisible = false;
-  elements.revealAnswerBtn.classList.remove("hidden");
-  elements.tryAgainBtn.classList.remove("hidden");
-  setWritingFeedback("Not yet. Reveal the answer or try again first.", "wrong");
   renderCard();
 }
 
@@ -317,62 +306,6 @@ function stopDrawing() {
 function clearWritingCanvas() {
   if (!writingContext) return;
   writingContext.clearRect(0, 0, elements.writingCanvas.width, elements.writingCanvas.height);
-}
-
-function getOcrEndpoint() {
-  return localStorage.getItem(ocrEndpointStorageKey) || "";
-}
-
-function setOcrEndpoint() {
-  const current = getOcrEndpoint();
-  const next = prompt("Paste your OCR worker endpoint URL:", current);
-  if (next === null) return;
-  localStorage.setItem(ocrEndpointStorageKey, next.trim());
-  setWritingFeedback(next.trim() ? "OCR endpoint saved." : "OCR endpoint cleared.", next.trim() ? "correct" : "");
-}
-
-async function checkWritingWithOcr() {
-  const endpoint = getOcrEndpoint();
-  if (!endpoint) {
-    setWritingFeedback("Set up an OCR endpoint first.", "wrong");
-    elements.revealAnswerBtn.classList.remove("hidden");
-    return;
-  }
-  const card = cards[currentIndex];
-  setWritingFeedback("Checking handwriting...", "");
-  elements.checkOcrBtn.disabled = true;
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageDataUrl: elements.writingCanvas.toDataURL("image/png"),
-        expectedTraditional: card.traditional,
-        expectedSimplified: card.simplified || card.traditional,
-        pinyin: card.pinyin
-      })
-    });
-    if (!response.ok) throw new Error(`OCR request failed: ${response.status}`);
-    const result = await response.json();
-    if (result.correct) {
-      isWritingAnswerVisible = true;
-      elements.revealAnswerBtn.classList.add("hidden");
-      elements.tryAgainBtn.classList.remove("hidden");
-      setWritingFeedback(`Correct. OCR read: ${result.recognized || card.traditional}`, "correct");
-    } else {
-      isWritingAnswerVisible = false;
-      elements.revealAnswerBtn.classList.remove("hidden");
-      elements.tryAgainBtn.classList.remove("hidden");
-      setWritingFeedback(`Not yet. OCR read: ${result.recognized || "unclear"}`, "wrong");
-    }
-    renderCard();
-  } catch (error) {
-    setWritingFeedback("OCR check failed. Reveal or try again.", "wrong");
-    elements.revealAnswerBtn.classList.remove("hidden");
-    console.error(error);
-  } finally {
-    elements.checkOcrBtn.disabled = false;
-  }
 }
 
 function getChineseVoice() {
@@ -482,12 +415,9 @@ elements.directionBtn.addEventListener("click", toggleDirection);
 elements.sentencePinyinBtn.addEventListener("click", toggleSentencePinyin);
 elements.writingModeBtn.addEventListener("click", toggleWritingMode);
 elements.clearCanvasBtn.addEventListener("click", clearWritingCanvas);
-elements.checkOcrBtn.addEventListener("click", checkWritingWithOcr);
 elements.markCorrectBtn.addEventListener("click", markWritingCorrect);
-elements.markWrongBtn.addEventListener("click", markWritingWrong);
 elements.revealAnswerBtn.addEventListener("click", revealWritingAnswer);
 elements.tryAgainBtn.addEventListener("click", resetWritingAttempt);
-elements.ocrEndpointBtn.addEventListener("click", setOcrEndpoint);
 elements.writingPrevBtn.addEventListener("click", () => moveCard(-1));
 elements.writingNextBtn.addEventListener("click", () => moveCard(1));
 elements.clearPracticeBtn.addEventListener("click", () => {
