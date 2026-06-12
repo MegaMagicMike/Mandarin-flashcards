@@ -1,0 +1,14 @@
+# Keep GitHub Pages uploads limited to the website files.
+ccedict/
+ccedict.zip
+converted/
+extracted_previews/
+jpg_import/
+photo_import/
+photos
+
+# Local/editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log

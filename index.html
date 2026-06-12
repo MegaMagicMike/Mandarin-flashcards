@@ -34,6 +34,7 @@
         <div class="direction-row" aria-label="Study direction">
           <button id="directionBtn" type="button" aria-pressed="false">Default: Chinese First</button>
           <button id="sentencePinyinBtn" type="button" aria-pressed="false">Sentence Pinyin: Off</button>
+          <button id="writingModeBtn" type="button" aria-pressed="false">Writing Mode: Off</button>
         </div>
 
         <article id="card" class="flashcard" tabindex="0" role="button" aria-label="Flip flashcard">
@@ -60,6 +61,40 @@
           <button id="flipBtn" class="primary" type="button">Flip</button>
           <button id="nextBtn" type="button">Next</button>
         </div>
+
+        <section id="writingPanel" class="writing-panel hidden" aria-label="Mobile writing practice">
+          <div class="writing-prompt">
+            <p class="prompt-label">Write in Chinese</p>
+            <p id="writingMeaning" class="writing-meaning">investor</p>
+            <p id="writingSentenceEnglish" class="writing-sentence">He is an investor in a technology company.</p>
+          </div>
+
+          <canvas id="writingCanvas" class="writing-canvas" aria-label="Finger writing canvas"></canvas>
+
+          <div id="writingAnswer" class="writing-answer hidden" aria-live="polite">
+            <p id="writingTraditional" class="writing-hanzi">投資人</p>
+            <p id="writingSimplified" class="writing-muted">投资人</p>
+            <p id="writingPinyin" class="writing-pinyin">tóuzīrén</p>
+          </div>
+
+          <p id="writingFeedback" class="writing-feedback" aria-live="polite"></p>
+
+          <div class="writing-controls" aria-label="Writing controls">
+            <button id="clearCanvasBtn" type="button">Clear</button>
+            <button id="checkOcrBtn" type="button">Check OCR</button>
+            <button id="markCorrectBtn" class="primary" type="button">Correct</button>
+            <button id="markWrongBtn" type="button">Not Yet</button>
+          </div>
+          <div class="writing-controls secondary">
+            <button id="revealAnswerBtn" class="hidden" type="button">Reveal Answer</button>
+            <button id="tryAgainBtn" class="hidden" type="button">Try Again</button>
+            <button id="ocrEndpointBtn" type="button">OCR Setup</button>
+          </div>
+          <div class="writing-controls nav">
+            <button id="writingPrevBtn" type="button">Previous</button>
+            <button id="writingNextBtn" type="button">Next</button>
+          </div>
+        </section>
       </section>
 
       <section class="practice-panel" aria-label="Writing practice">

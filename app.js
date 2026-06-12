@@ -2,12 +2,19 @@ const sampleCards = Array.isArray(window.defaultCards) ? window.defaultCards : [
 const storageKey = "taiwanMandarinFlashcards.v7";
 const directionStorageKey = "taiwanMandarinFlashcardDirection";
 const sentencePinyinStorageKey = "taiwanMandarinSentencePinyin";
+const writingModeStorageKey = "taiwanMandarinWritingMode";
+const ocrEndpointStorageKey = "taiwanMandarinOcrEndpoint";
 
 let cards = loadCards();
 let currentIndex = 0;
 let isFlipped = false;
 let isChineseFirst = loadDirection();
 let isSentencePinyinVisible = loadSentencePinyin();
+let isWritingMode = loadWritingMode();
+let isWritingAnswerVisible = false;
+let writingContext = null;
+let isDrawing = false;
+let lastPoint = null;
 
 const elements = {
   card: document.getElementById("card"),
@@ -30,6 +37,25 @@ const elements = {
   stopAudioBtn: document.getElementById("stopAudioBtn"),
   directionBtn: document.getElementById("directionBtn"),
   sentencePinyinBtn: document.getElementById("sentencePinyinBtn"),
+  writingModeBtn: document.getElementById("writingModeBtn"),
+  writingPanel: document.getElementById("writingPanel"),
+  writingMeaning: document.getElementById("writingMeaning"),
+  writingSentenceEnglish: document.getElementById("writingSentenceEnglish"),
+  writingCanvas: document.getElementById("writingCanvas"),
+  writingAnswer: document.getElementById("writingAnswer"),
+  writingTraditional: document.getElementById("writingTraditional"),
+  writingSimplified: document.getElementById("writingSimplified"),
+  writingPinyin: document.getElementById("writingPinyin"),
+  writingFeedback: document.getElementById("writingFeedback"),
+  clearCanvasBtn: document.getElementById("clearCanvasBtn"),
+  checkOcrBtn: document.getElementById("checkOcrBtn"),
+  markCorrectBtn: document.getElementById("markCorrectBtn"),
+  markWrongBtn: document.getElementById("markWrongBtn"),
+  revealAnswerBtn: document.getElementById("revealAnswerBtn"),
+  tryAgainBtn: document.getElementById("tryAgainBtn"),
+  ocrEndpointBtn: document.getElementById("ocrEndpointBtn"),
+  writingPrevBtn: document.getElementById("writingPrevBtn"),
+  writingNextBtn: document.getElementById("writingNextBtn"),
   clearPracticeBtn: document.getElementById("clearPracticeBtn"),
   practiceBox: document.getElementById("practiceBox"),
   cardList: document.getElementById("cardList"),
@@ -58,6 +84,10 @@ function loadSentencePinyin() {
   return localStorage.getItem(sentencePinyinStorageKey) === "visible";
 }
 
+function loadWritingMode() {
+  return localStorage.getItem(writingModeStorageKey) === "visible";
+}
+
 function saveCards() {
   localStorage.setItem(storageKey, JSON.stringify(cards));
 }
@@ -68,6 +98,10 @@ function saveDirection() {
 
 function saveSentencePinyin() {
   localStorage.setItem(sentencePinyinStorageKey, isSentencePinyinVisible ? "visible" : "hidden");
+}
+
+function saveWritingMode() {
+  localStorage.setItem(writingModeStorageKey, isWritingMode ? "visible" : "hidden");
 }
 
 function resetDeck() {
@@ -101,7 +135,22 @@ function renderCard() {
   elements.sentencePinyin.classList.toggle("hidden", !isSentencePinyinVisible);
   elements.sentencePinyinBtn.textContent = isSentencePinyinVisible ? "Sentence Pinyin: On" : "Sentence Pinyin: Off";
   elements.sentencePinyinBtn.setAttribute("aria-pressed", String(isSentencePinyinVisible));
+  elements.writingModeBtn.textContent = isWritingMode ? "Writing Mode: On" : "Writing Mode: Off";
+  elements.writingModeBtn.setAttribute("aria-pressed", String(isWritingMode));
+  elements.writingPanel.classList.toggle("hidden", !isWritingMode);
+  elements.card.classList.toggle("hidden", isWritingMode);
+  elements.flipBtn.classList.toggle("hidden", isWritingMode);
+  renderWritingPanel(card);
   renderList();
+}
+
+function renderWritingPanel(card) {
+  elements.writingMeaning.textContent = card.meaning;
+  elements.writingSentenceEnglish.textContent = card.sentenceEnglish || makeSentenceEnglish(card);
+  elements.writingTraditional.textContent = card.traditional;
+  elements.writingSimplified.textContent = card.simplified || card.traditional;
+  elements.writingPinyin.textContent = card.pinyin;
+  elements.writingAnswer.classList.toggle("hidden", !isWritingAnswerVisible);
 }
 
 function renderList() {
@@ -132,6 +181,7 @@ function flipCard() {
 function moveCard(direction) {
   currentIndex = (currentIndex + direction + cards.length) % cards.length;
   isFlipped = false;
+  resetWritingAttempt();
   renderCard();
 }
 
@@ -154,6 +204,175 @@ function toggleSentencePinyin() {
   isSentencePinyinVisible = !isSentencePinyinVisible;
   saveSentencePinyin();
   renderCard();
+}
+
+function toggleWritingMode() {
+  isWritingMode = !isWritingMode;
+  isFlipped = false;
+  resetWritingAttempt();
+  saveWritingMode();
+  renderCard();
+  if (isWritingMode) {
+    requestAnimationFrame(resizeWritingCanvas);
+  }
+}
+
+function resetWritingAttempt() {
+  isWritingAnswerVisible = false;
+  setWritingFeedback("", "");
+  elements.revealAnswerBtn.classList.add("hidden");
+  elements.tryAgainBtn.classList.add("hidden");
+  clearWritingCanvas();
+}
+
+function revealWritingAnswer() {
+  isWritingAnswerVisible = true;
+  elements.tryAgainBtn.classList.remove("hidden");
+  renderCard();
+}
+
+function markWritingCorrect() {
+  isWritingAnswerVisible = true;
+  elements.revealAnswerBtn.classList.add("hidden");
+  elements.tryAgainBtn.classList.remove("hidden");
+  setWritingFeedback("Correct. Compare your writing with the answer.", "correct");
+  renderCard();
+}
+
+function markWritingWrong() {
+  isWritingAnswerVisible = false;
+  elements.revealAnswerBtn.classList.remove("hidden");
+  elements.tryAgainBtn.classList.remove("hidden");
+  setWritingFeedback("Not yet. Reveal the answer or try again first.", "wrong");
+  renderCard();
+}
+
+function setWritingFeedback(text, state) {
+  elements.writingFeedback.textContent = text;
+  elements.writingFeedback.classList.toggle("correct", state === "correct");
+  elements.writingFeedback.classList.toggle("wrong", state === "wrong");
+}
+
+function setupWritingCanvas() {
+  writingContext = elements.writingCanvas.getContext("2d");
+  resizeWritingCanvas();
+  window.addEventListener("resize", resizeWritingCanvas);
+  elements.writingCanvas.addEventListener("pointerdown", startDrawing);
+  elements.writingCanvas.addEventListener("pointermove", drawStroke);
+  elements.writingCanvas.addEventListener("pointerup", stopDrawing);
+  elements.writingCanvas.addEventListener("pointercancel", stopDrawing);
+  elements.writingCanvas.addEventListener("pointerleave", stopDrawing);
+}
+
+function resizeWritingCanvas() {
+  if (!writingContext) return;
+  const canvas = elements.writingCanvas;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const previous = canvas.toDataURL("image/png");
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * ratio);
+  canvas.height = Math.round(rect.height * ratio);
+  writingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+  writingContext.lineCap = "round";
+  writingContext.lineJoin = "round";
+  writingContext.lineWidth = 9;
+  writingContext.strokeStyle = "#111827";
+  const image = new Image();
+  image.onload = () => writingContext.drawImage(image, 0, 0, rect.width, rect.height);
+  image.src = previous;
+}
+
+function getCanvasPoint(event) {
+  const rect = elements.writingCanvas.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+}
+
+function startDrawing(event) {
+  event.preventDefault();
+  isDrawing = true;
+  lastPoint = getCanvasPoint(event);
+  elements.writingCanvas.setPointerCapture(event.pointerId);
+}
+
+function drawStroke(event) {
+  if (!isDrawing || !lastPoint || !writingContext) return;
+  event.preventDefault();
+  const point = getCanvasPoint(event);
+  writingContext.beginPath();
+  writingContext.moveTo(lastPoint.x, lastPoint.y);
+  writingContext.lineTo(point.x, point.y);
+  writingContext.stroke();
+  lastPoint = point;
+}
+
+function stopDrawing() {
+  isDrawing = false;
+  lastPoint = null;
+}
+
+function clearWritingCanvas() {
+  if (!writingContext) return;
+  writingContext.clearRect(0, 0, elements.writingCanvas.width, elements.writingCanvas.height);
+}
+
+function getOcrEndpoint() {
+  return localStorage.getItem(ocrEndpointStorageKey) || "";
+}
+
+function setOcrEndpoint() {
+  const current = getOcrEndpoint();
+  const next = prompt("Paste your OCR worker endpoint URL:", current);
+  if (next === null) return;
+  localStorage.setItem(ocrEndpointStorageKey, next.trim());
+  setWritingFeedback(next.trim() ? "OCR endpoint saved." : "OCR endpoint cleared.", next.trim() ? "correct" : "");
+}
+
+async function checkWritingWithOcr() {
+  const endpoint = getOcrEndpoint();
+  if (!endpoint) {
+    setWritingFeedback("Set up an OCR endpoint first.", "wrong");
+    elements.revealAnswerBtn.classList.remove("hidden");
+    return;
+  }
+  const card = cards[currentIndex];
+  setWritingFeedback("Checking handwriting...", "");
+  elements.checkOcrBtn.disabled = true;
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageDataUrl: elements.writingCanvas.toDataURL("image/png"),
+        expectedTraditional: card.traditional,
+        expectedSimplified: card.simplified || card.traditional,
+        pinyin: card.pinyin
+      })
+    });
+    if (!response.ok) throw new Error(`OCR request failed: ${response.status}`);
+    const result = await response.json();
+    if (result.correct) {
+      isWritingAnswerVisible = true;
+      elements.revealAnswerBtn.classList.add("hidden");
+      elements.tryAgainBtn.classList.remove("hidden");
+      setWritingFeedback(`Correct. OCR read: ${result.recognized || card.traditional}`, "correct");
+    } else {
+      isWritingAnswerVisible = false;
+      elements.revealAnswerBtn.classList.remove("hidden");
+      elements.tryAgainBtn.classList.remove("hidden");
+      setWritingFeedback(`Not yet. OCR read: ${result.recognized || "unclear"}`, "wrong");
+    }
+    renderCard();
+  } catch (error) {
+    setWritingFeedback("OCR check failed. Reveal or try again.", "wrong");
+    elements.revealAnswerBtn.classList.remove("hidden");
+    console.error(error);
+  } finally {
+    elements.checkOcrBtn.disabled = false;
+  }
 }
 
 function getChineseVoice() {
@@ -261,6 +480,16 @@ elements.stopAudioBtn.addEventListener("click", () => {
 });
 elements.directionBtn.addEventListener("click", toggleDirection);
 elements.sentencePinyinBtn.addEventListener("click", toggleSentencePinyin);
+elements.writingModeBtn.addEventListener("click", toggleWritingMode);
+elements.clearCanvasBtn.addEventListener("click", clearWritingCanvas);
+elements.checkOcrBtn.addEventListener("click", checkWritingWithOcr);
+elements.markCorrectBtn.addEventListener("click", markWritingCorrect);
+elements.markWrongBtn.addEventListener("click", markWritingWrong);
+elements.revealAnswerBtn.addEventListener("click", revealWritingAnswer);
+elements.tryAgainBtn.addEventListener("click", resetWritingAttempt);
+elements.ocrEndpointBtn.addEventListener("click", setOcrEndpoint);
+elements.writingPrevBtn.addEventListener("click", () => moveCard(-1));
+elements.writingNextBtn.addEventListener("click", () => moveCard(1));
 elements.clearPracticeBtn.addEventListener("click", () => {
   elements.practiceBox.value = "";
   elements.practiceBox.focus();
@@ -299,6 +528,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "s") speakCurrentSentence();
   if (event.key.toLowerCase() === "d") toggleDirection();
   if (event.key.toLowerCase() === "p") toggleSentencePinyin();
+  if (event.key.toLowerCase() === "m") toggleWritingMode();
 });
 
 if ("speechSynthesis" in window) {
@@ -306,3 +536,4 @@ if ("speechSynthesis" in window) {
 }
 
 renderCard();
+setupWritingCanvas();

@@ -1,0 +1,6 @@
+name = "mandarin-flashcards-ocr"
+main = "ocr-worker.js"
+compatibility_date = "2026-06-11"
+
+# Add OPENAI_API_KEY as a secret in Cloudflare Workers.
+# Optional: set OPENAI_MODEL as a plain environment variable.

@@ -84,7 +84,8 @@ h2 {
 .study-panel,
 .practice-panel,
 .list-panel,
-.import-panel {
+.import-panel,
+.writing-panel {
   margin-top: 16px;
 }
 
@@ -264,6 +265,115 @@ h2 {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
+.writing-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.writing-prompt {
+  text-align: center;
+}
+
+.prompt-label {
+  margin-bottom: 6px;
+  color: var(--warm);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.writing-meaning {
+  margin-bottom: 8px;
+  color: var(--accent-dark);
+  font-size: clamp(1.7rem, 8vw, 3rem);
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.writing-sentence {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.writing-canvas {
+  display: block;
+  width: 100%;
+  height: min(48vh, 360px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    #fffdf9;
+  background-size: 52px 52px;
+  touch-action: none;
+}
+
+.writing-answer {
+  margin-top: 12px;
+  border: 1px solid var(--accent-soft);
+  border-radius: 8px;
+  background: #f2fbf8;
+  padding: 12px;
+  text-align: center;
+}
+
+.writing-hanzi {
+  margin-bottom: 4px;
+  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans CJK TC", serif;
+  font-size: clamp(2.4rem, 14vw, 4.8rem);
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.writing-muted,
+.writing-pinyin {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.writing-pinyin {
+  color: var(--warm);
+}
+
+.writing-feedback {
+  min-height: 28px;
+  margin: 12px 0 0;
+  text-align: center;
+  font-weight: 850;
+}
+
+.writing-feedback.correct {
+  color: #047857;
+}
+
+.writing-feedback.wrong {
+  color: #b91c1c;
+}
+
+.writing-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.writing-controls.secondary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.writing-controls.nav {
+  grid-template-columns: 1fr 1fr;
+}
+
 button {
   min-height: 48px;
   border: 1px solid var(--line);
@@ -375,5 +485,10 @@ textarea {
 
   .direction-row {
     grid-template-columns: 1fr;
+  }
+
+  .writing-controls,
+  .writing-controls.secondary {
+    grid-template-columns: 1fr 1fr;
   }
 }
