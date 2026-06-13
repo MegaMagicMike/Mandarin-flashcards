@@ -273,7 +273,7 @@ h2 {
   box-shadow: var(--shadow);
   padding: 14px;
   overscroll-behavior: contain;
-  touch-action: manipulation;
+  touch-action: pan-y;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -473,7 +473,7 @@ textarea {
 }
 
 body.writing-active {
-  overscroll-behavior: none;
+  overscroll-behavior-y: contain;
 }
 
 body.writing-active .practice-panel,

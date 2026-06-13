@@ -256,7 +256,6 @@ function setupWritingCanvas() {
   elements.writingCanvas.addEventListener("touchmove", drawStroke, { passive: false });
   elements.writingCanvas.addEventListener("touchend", stopDrawing);
   elements.writingCanvas.addEventListener("contextmenu", preventDefault);
-  elements.writingPanel.addEventListener("touchmove", preventWritingScroll, { passive: false });
 }
 
 function resizeWritingCanvas() {
@@ -314,12 +313,6 @@ function stopDrawing() {
 
 function preventDefault(event) {
   event.preventDefault();
-}
-
-function preventWritingScroll(event) {
-  if (isWritingMode && !event.target.closest("button")) {
-    event.preventDefault();
-  }
 }
 
 function clearWritingCanvas() {
