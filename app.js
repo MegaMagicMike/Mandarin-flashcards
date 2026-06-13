@@ -133,6 +133,7 @@ function renderCard() {
   elements.sentencePinyinBtn.setAttribute("aria-pressed", String(isSentencePinyinVisible));
   elements.writingModeBtn.textContent = isWritingMode ? "Writing Mode: On" : "Writing Mode: Off";
   elements.writingModeBtn.setAttribute("aria-pressed", String(isWritingMode));
+  document.body.classList.toggle("writing-active", isWritingMode);
   elements.writingPanel.classList.toggle("hidden", !isWritingMode);
   elements.card.classList.toggle("hidden", isWritingMode);
   elements.flipBtn.classList.toggle("hidden", isWritingMode);
@@ -251,6 +252,11 @@ function setupWritingCanvas() {
   elements.writingCanvas.addEventListener("pointerup", stopDrawing);
   elements.writingCanvas.addEventListener("pointercancel", stopDrawing);
   elements.writingCanvas.addEventListener("pointerleave", stopDrawing);
+  elements.writingCanvas.addEventListener("touchstart", startDrawing, { passive: false });
+  elements.writingCanvas.addEventListener("touchmove", drawStroke, { passive: false });
+  elements.writingCanvas.addEventListener("touchend", stopDrawing);
+  elements.writingCanvas.addEventListener("contextmenu", preventDefault);
+  elements.writingPanel.addEventListener("touchmove", preventWritingScroll, { passive: false });
 }
 
 function resizeWritingCanvas() {
@@ -274,9 +280,10 @@ function resizeWritingCanvas() {
 
 function getCanvasPoint(event) {
   const rect = elements.writingCanvas.getBoundingClientRect();
+  const point = event.touches?.[0] || event.changedTouches?.[0] || event;
   return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
+    x: point.clientX - rect.left,
+    y: point.clientY - rect.top
   };
 }
 
@@ -284,7 +291,9 @@ function startDrawing(event) {
   event.preventDefault();
   isDrawing = true;
   lastPoint = getCanvasPoint(event);
-  elements.writingCanvas.setPointerCapture(event.pointerId);
+  if (event.pointerId !== undefined) {
+    elements.writingCanvas.setPointerCapture(event.pointerId);
+  }
 }
 
 function drawStroke(event) {
@@ -301,6 +310,16 @@ function drawStroke(event) {
 function stopDrawing() {
   isDrawing = false;
   lastPoint = null;
+}
+
+function preventDefault(event) {
+  event.preventDefault();
+}
+
+function preventWritingScroll(event) {
+  if (isWritingMode && !event.target.closest("button")) {
+    event.preventDefault();
+  }
 }
 
 function clearWritingCanvas() {
